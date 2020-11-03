@@ -11,33 +11,33 @@ import sys, mailbox, csv
 import dateutil.parser as parser
 
 def print_progress(pct_progress):
-    sys.stdout.write('\r[{0}] {1}%'.format('#'*(pct_progress/10), pct_progress))
+    sys.stdout.write('\r[{0}] {1}%'.format('#'*(pct_progress//10), pct_progress))
     sys.stdout.flush()
 
 # Recurses down a message payload tree until a string is found
 def get_final_payload(msg):
-    if isinstance(msg, basestring):
+    if isinstance(msg, str):
         return msg
-    if isinstance(msg.get_payload(), basestring):
+    if isinstance(msg.get_payload(), str):
         return msg.get_payload()
     return get_final_payload(msg.get_payload()[0])
 
 mbox_file = sys.argv[1]
 output_file = sys.argv[2] if len(sys.argv) > 2 else 'output.csv'
 
-print 'Reading mbox file...'
+print('Reading mbox file...')
 messages = mailbox.mbox(mbox_file)
-writer = csv.writer(open(output_file, "wb"))
+writer = csv.writer(open(output_file, "w"))
 
 writer.writerow(['subject', 'from', 'date', 'message'])
 n = len(messages)
-print 'Writing messages...'
+print('Writing messages...')
 for (i, msg) in enumerate(messages):
     body = get_final_payload(msg)
 
     # convert any date format to ISO!
-    date = parser.parse(msg['date'])
-    iso_date = date.isoformat()
+    date = parser.parse(msg['date']) if msg['date'] is not None else None
+    iso_date = date.isoformat() if date is not None else ''
 
     writer.writerow([msg['subject'], msg['from'], iso_date, body])
 
@@ -46,5 +46,5 @@ for (i, msg) in enumerate(messages):
         pct_complete = int(round(i/float(n) * 100.0))
         print_progress(pct_complete)
     
-print
-print 'Wrote %s' % output_file
+print()
+print('Wrote %s' % output_file)
